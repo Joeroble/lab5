@@ -1,6 +1,22 @@
 """
 A menu - you need to add the database and fill in the functions. 
 """
+from peewee import *
+
+db = SqliteDatabase('chainsaw_records.sqlite')
+
+class Record(Model):
+    name = CharField()
+    country = CharField()
+    number_of_catches = IntegerField()
+
+    class Meta:
+        database = db
+    
+    def __str__(self):
+        return f'{self.name}, {self.country}, {self.number_of_catches}'
+db.connect()
+db.create_tables([Record])
 
 
 def main():
@@ -30,20 +46,50 @@ def main():
 
 
 def display_all_records():
-    print('todo display all records')
+    records = Record.select()
+    for record in records:
+        print(record)
 
 
 def add_new_record():
-    print('todo add new record. What if user wants to add a record that already exists?')
+    holder_name = input('What is the name of the record holder? ')
+
+    if Record.get_or_none(name = holder_name):
+        print(f'{holder_name} has already been added to the records.')
+    
+    else:
+        country_of_holder = input('What is the country of the holder? ')
+        record_catches = int(input('What is the number of catches? '))
+        holder_name = Record(name = holder_name, country = country_of_holder, number_of_catches = record_catches)
+        holder_name.save()
+        print(f'{holder_name} has been added to the records!')
+
 
 
 def edit_existing_record():
-    print('todo edit existing record. What if user wants to edit record that does not exist?') 
+    record_to_edit = input('Please enter the name of the record holder to edit: ')
+
+    if Record.get_or_none(name = record_to_edit):
+        new_record = int(input('Please enter a new record: '))
+        Record.update(number_of_catches = new_record).where(Record.name == record_to_edit).execute()
+        print('Record has been updated. ')
+
+    else: 
+        print('Record not found.')
+    
+
+
 
 
 def delete_record():
-    print('todo delete existing record. What if user wants to delete record that does not exist?') 
+    record_to_delete = input('Please enter the record holder name to delete the record: ')
 
+    if Record.get_or_none(name = record_to_delete):
+        Record.delete().where(Record.name == record_to_delete).execute()
+        print(f'{record_to_delete} has been deleted from the records.')
+    else:
+        print('Record not found.')
+    
 
 if __name__ == '__main__':
     main()
